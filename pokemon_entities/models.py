@@ -13,6 +13,8 @@ class PokemonEntity(models.Model):
     Pokemon = models.ForeignKey(Pokemon, on_delete=models.CASCADE)
     Lat = models.FloatField()
     Lon = models.FloatField()
+    Appeared_at = models.DateTimeField(null=True)
+    Disappeared_at = models.DateTimeField(null=True)
 
     def __str__(self):
         return f'{self.Pokemon} находится в точке {self.Lat}-{self.Lon}'
