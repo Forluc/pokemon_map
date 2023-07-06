@@ -74,10 +74,12 @@ def show_pokemon(request, pokemon_id):
                     pokemon_entity.lon,
                     pokemon_photo,
                 )
-                pokemon_details['img_url'] = pokemon_photo
-                pokemon_details['title_ru'] = pokemon.title
-                pokemon_details['description'] = pokemon.description
-                
+            pokemon_details['img_url'] = pokemon_photo
+            pokemon_details['title_ru'] = pokemon.title
+            pokemon_details['description'] = pokemon.description
+            pokemon_details['title_en'] = pokemon.title_en
+            pokemon_details['title_jp'] = pokemon.title_jp
+
             break
         else:
             return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
