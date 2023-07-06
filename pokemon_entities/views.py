@@ -66,7 +66,7 @@ def show_pokemon(request, pokemon_id):
         if pokemon.id == int(pokemon_id):
             pokemon_details = {}
             pokemons_entity = pokemon.entities.filter(appeared_at__lt=localtime().now(),
-                                                     disappeared_at__gt=localtime().now())
+                                                      disappeared_at__gt=localtime().now())
             for pokemon_entity in pokemons_entity:
                 add_pokemon(
                     folium_map,
@@ -76,7 +76,8 @@ def show_pokemon(request, pokemon_id):
                 )
                 pokemon_details['img_url'] = pokemon_photo
                 pokemon_details['title_ru'] = pokemon.title
-
+                pokemon_details['description'] = pokemon.description
+                
             break
         else:
             return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
