@@ -1,5 +1,6 @@
 # Created by https://www.gitignore.io
 
+
 .idea
 
 ### OSX ###
@@ -86,6 +87,11 @@ target/
 __pycache__/
 local_settings.py
 
-.env
+# Django stuff:
+*.log
+local_settings.py
 db.sqlite3
+db.sqlite3-journal
+pokemon_entities/migrations
+.env
 media/
