@@ -21,11 +21,11 @@ class PokemonEntity(models.Model):
     lon = models.FloatField('Долгота')
     appeared_at = models.DateTimeField('Дата появления покемона', null=True, blank=True)
     disappeared_at = models.DateTimeField('Дата исчезновения покемона', null=True, blank=True)
-    level = models.IntegerField('Уровень')
-    health = models.IntegerField('Здоровье')
-    strength = models.IntegerField('Сила')
-    defence = models.IntegerField('Защита')
-    stamina = models.IntegerField('Выносливость')
+    level = models.IntegerField('Уровень', null=True, blank=True)
+    health = models.IntegerField('Здоровье', null=True, blank=True)
+    strength = models.IntegerField('Сила', null=True, blank=True)
+    defence = models.IntegerField('Защита', null=True, blank=True)
+    stamina = models.IntegerField('Выносливость', null=True, blank=True)
 
     def __str__(self):
         return f'{self.pokemon} находится в точке {self.lat}-{self.lon}'
