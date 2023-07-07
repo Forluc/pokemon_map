@@ -1,6 +1,5 @@
-import django.http
 import folium
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from pokemon_entities.models import Pokemon
 from django.utils.timezone import localtime
 
@@ -29,15 +28,24 @@ def show_all_pokemons(request):
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     pokemons_on_page = []
     pokemons = Pokemon.objects.all()
+    time_now = localtime().now()
     for pokemon in pokemons:
-        pokemon_photo = request.build_absolute_uri(pokemon.photo.url) if pokemon.photo else DEFAULT_IMAGE_URL
+        pokemon_photo = get_pokemon_photo(request, pokemon)
         pokemons_on_page.append({
             'pokemon_id': pokemon.id,
             'img_url': pokemon_photo,
             'title_ru': pokemon.title,
         })
 
-        get_pokemons_entity(pokemon, folium_map, pokemon_photo)
+        pokemons_entity = pokemon.entities.filter(appeared_at__lt=time_now,
+                                                  disappeared_at__gt=time_now)
+        for pokemon_entity in pokemons_entity:
+            add_pokemon(
+                folium_map,
+                pokemon_entity.lat,
+                pokemon_entity.lon,
+                pokemon_photo,
+            )
 
     return render(request, 'mainpage.html', context={
         'map': folium_map._repr_html_(),
@@ -46,34 +54,21 @@ def show_all_pokemons(request):
 
 
 def show_pokemon(request, pokemon_id):
-    try:
-        pokemon = Pokemon.objects.get(id=pokemon_id)
-    except django.http.Http404:
-        raise '<h1>Такой покемон не найден</h1>'
+    chosen_pokemon = get_object_or_404(Pokemon, id=pokemon_id)
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
 
-    if pokemon.id == int(pokemon_id):
-        pokemon_photo = request.build_absolute_uri(pokemon.photo.url) if pokemon.photo else DEFAULT_IMAGE_URL
-        pokemon_details = {
-            'img_url': pokemon_photo,
-            'title_ru': pokemon.title,
-            'description': pokemon.description,
-            'title_en': pokemon.title_en,
-            'title_jp': pokemon.title_jp,
-        }
+    pokemon_photo = get_pokemon_photo(request, chosen_pokemon)
+    pokemon_details = {
+        'img_url': pokemon_photo,
+        'title_ru': chosen_pokemon.title,
+        'description': chosen_pokemon.description,
+        'title_en': chosen_pokemon.title_en,
+        'title_jp': chosen_pokemon.title_jp,
+    }
 
-        get_pokemons_entity(pokemon, folium_map, pokemon_photo)
-        get_next_evolution(request, pokemon, pokemon_details)
-        get_previous_evolution(request, pokemon, pokemon_details)
-
-    return render(request, 'pokemon.html', context={
-        'map': folium_map._repr_html_(), 'pokemon': pokemon_details
-    })
-
-
-def get_pokemons_entity(pokemon, folium_map, pokemon_photo):
-    pokemons_entity = pokemon.entities.filter(appeared_at__lt=localtime().now(),
-                                              disappeared_at__gt=localtime().now())
+    time_now = localtime().now()
+    pokemons_entity = chosen_pokemon.entities.filter(appeared_at__lt=time_now,
+                                                     disappeared_at__gt=time_now)
     for pokemon_entity in pokemons_entity:
         add_pokemon(
             folium_map,
@@ -82,24 +77,28 @@ def get_pokemons_entity(pokemon, folium_map, pokemon_photo):
             pokemon_photo,
         )
 
-
-def get_next_evolution(request, pokemon, pokemon_details):
-    pokemon = pokemon.next_evolution.all().first()
+    pokemon = chosen_pokemon.next_evolutions.first()
     if pokemon:
-        pokemon_photo = request.build_absolute_uri(pokemon.photo.url) if pokemon.photo else DEFAULT_IMAGE_URL
+        pokemon_photo = get_pokemon_photo(request, pokemon)
         pokemon_details['next_evolution'] = {
             "title_ru": pokemon.title,
             "pokemon_id": pokemon.id,
             "img_url": pokemon_photo
         }
 
-
-def get_previous_evolution(request, pokemon, pokemon_details):
-    pokemon = pokemon.previous_evolution
+    pokemon = chosen_pokemon.previous_evolution
     if pokemon:
-        pokemon_photo = request.build_absolute_uri(pokemon.photo.url) if pokemon.photo else DEFAULT_IMAGE_URL
+        pokemon_photo = get_pokemon_photo(request, pokemon)
         pokemon_details['previous_evolution'] = {
             "title_ru": pokemon.title,
             "pokemon_id": pokemon.id,
             "img_url": pokemon_photo
         }
+
+    return render(request, 'pokemon.html', context={
+        'map': folium_map._repr_html_(), 'pokemon': pokemon_details
+    })
+
+
+def get_pokemon_photo(request, pokemon):
+    return request.build_absolute_uri(pokemon.photo.url) if pokemon.photo else DEFAULT_IMAGE_URL
